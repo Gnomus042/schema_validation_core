@@ -11,7 +11,9 @@ const Store = n3.Store;
 const streamify = require('streamify-string');
 const RdfaParser = require('rdfa-streaming-parser').RdfaParser;
 
-const microdata = require('microdata-node')
+const microdata = require('microdata-node');
+
+const errors = require('./errors');
 
 /**
  * Loads related data (shapes, context, etc.) from remote or local source
@@ -199,7 +201,7 @@ async function inputToQuads(text, baseUrl, context) {
     const rdfaParser = async () => await parseRdfa(text, baseUrl);
     const microdataParser = async () => await parseMicrodata(text, baseUrl);
     let res = await tryParse(jsonParser) || await tryParse(microdataParser) || await tryParse(rdfaParser);
-    if (!res) throw "Incorrect data format. Possible formats: json-ld, microdata, rdfa";
+    if (!res || res.getQuads().length === 0) throw new errors.InvalidDataError("Error while parsing the data. This could be caused by incorrect data or incorrect data format. Possible formats: json-ld, microdata, rdfa");
     return res;
 }
 
