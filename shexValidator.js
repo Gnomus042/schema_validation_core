@@ -165,17 +165,6 @@ class ShexValidator {
     }
 
     /**
-     * @param {Store} quads
-     * @param {string} baseUrl
-     * @returns {string}
-     */
-    getType(quads, baseUrl) {
-        let typeQuads = quads.getQuads(baseUrl, TYPE, undefined);
-        if (typeQuads.length === 0) throw new errors.InvalidDataError("Data is required to have a type field ");
-        return typeQuads[0].object.value.replace(this.schemaUrl, '');
-    }
-
-    /**
      * Validates data against ShEx shapes
      * @param {string} data
      * @param {string} service - e.g. Google, Bing, ...
@@ -186,7 +175,7 @@ class ShexValidator {
         const baseUrl = options.baseUrl || utils.randomUrl();
         const quads = await utils.inputToQuads(data, baseUrl, this.context);
 
-        const shape = this.getType(quads, baseUrl);
+        const shape = utils.getType(quads, baseUrl).replace(/.*[\\/#]/, '');
         const db = shex.Util.makeN3DB(quads);
         const validator = shex.Validator.construct(this.shexShapes);
         const errors = new ValidationReport(validator.validate(db, [{

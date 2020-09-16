@@ -8,7 +8,7 @@ async function validateLocal() {
     let shexShapes = JSON.parse(await utils.loadData('C:\\Users\\anast\\Projects\\Schema\\shex-testing\\utils\\full.shexj'));
 
     let data = fs.readFileSync('C:\\Users\\anast\\Projects\\Schema\\shex-testing\\data\\0.json').toString();
-    return (new ShexValidator(context, shexShapes)).validate(data, 'Recipe', '');
+    return (new ShexValidator(context, shexShapes)).validate(data, '');
 }
 
 async function validateGlobal() {
@@ -22,6 +22,7 @@ async function validateGlobal() {
 async function validateShaclLocal() {
     let context = JSON.parse(await utils.loadData('C:\\Users\\anast\\Projects\\Schema\\shex-testing\\utils\\context.json'));
     let shaclShapes = await utils.loadData('C:\\Users\\anast\\Projects\\Schema\\shex-testing\\utils\\fullfull.shacl');
+
     let subclasses = await utils.loadData('C:\\Users\\anast\\Projects\\Schema\\shex-testing\\utils\\subclasses.ttl');
     let validator = new ShaclValidator(shaclShapes, subclasses, context);
 

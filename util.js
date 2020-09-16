@@ -7,13 +7,13 @@ const jsonld = require('jsonld');
 const n3 = require('n3');
 const { namedNode, blankNode, variable, literal, defaultGraph, quad } = n3.DataFactory;
 const Store = n3.Store;
-
 const streamify = require('streamify-string');
 const RdfaParser = require('rdfa-streaming-parser').RdfaParser;
-
 const microdata = require('microdata-node');
 
 const errors = require('./errors');
+
+const TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
 
 /**
  * Loads related data (shapes, context, etc.) from remote or local source
@@ -205,11 +205,22 @@ async function inputToQuads(text, baseUrl, context) {
     return res;
 }
 
+/**
+ * @param {Store} quads
+ * @param {string} baseUrl
+ * @returns {string}
+ */
+function getType(quads, baseUrl) {
+    let typeQuads = quads.getQuads(baseUrl, TYPE, undefined);
+    if (typeQuads.length === 0) throw new errors.InvalidDataError("Data is required to have a type field ");
+    return typeQuads[0].object.value.replace(this.schemaUrl, '');
+}
 
 module.exports = {
     randomUrl: randomUrl,
     loadData: loadData,
     uniqueBy: uniqueBy,
+    getType: getType,
     inputToQuads: inputToQuads,
     parseTurtle: parseTurtle,
 };
