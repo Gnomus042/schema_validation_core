@@ -15,14 +15,16 @@ function SHACL(value) {
 class ShaclValidator {
     /**
      * @param {string} shaclSchema - shacl shapes in string format
-     * @param {string} subclasses - subclasses hierarchy, that should be added to data
      * @param {{
      *     context: object|undefined,
      *     annotations: object|undefined,
+     *     subclasses: string
      * }} options
      */
-    constructor(shaclSchema, subclasses, options) {
-        this.subclasses = utils.parseTurtle(subclasses);
+    constructor(shaclSchema, options) {
+        if (options.subclasses) {
+            this.subclasses = utils.parseTurtle(options.subclasses);
+        }
         this.shapes = utils.parseTurtle(shaclSchema);
         this.context = options.context || {};
         this.annotations = options.annotations || {};
@@ -84,10 +86,16 @@ class ShaclValidator {
     async validate(data) {
         let baseUrl = utils.randomUrl();
         let quads = await utils.inputToQuads(data, baseUrl, this.context);
-        let quadsWithSubclasses = quads.getQuads();
-        quadsWithSubclasses.push(...this.subclasses.getQuads());
-        let report = this.validator.validate(quadsWithSubclasses).results
-            .map(x => this.toStructuredDataFailure(x));
+        let report;
+        if (this.subclasses) {
+            let quadsWithSubclasses = quads.getQuads();
+            quadsWithSubclasses.push(...this.subclasses.getQuads());
+            report = this.validator.validate(quadsWithSubclasses).results
+                .map(x => this.toStructuredDataFailure(x));
+        } else {
+            report = this.validator.validate(quads.getQuads()).results
+                .map(x => this.toStructuredDataFailure(x));
+        }
         return {
             baseUrl: baseUrl,
             quads: quads,
