@@ -1,30 +1,32 @@
 const SHACLValidator = require('rdf-validate-shacl');
-const rdf = require('rdf-ext');
+const namedNode = require('n3').DataFactory.namedNode;
 
 const utils = require('./util.js');
+
+/**
+ * Adds shacl base prefix to value
+ * @param {string} value
+ * @return {string}
+ */
+function SHACL(value) {
+    return 'http://www.w3.org/ns/shacl#' + value;
+}
 
 class ShaclValidator {
     /**
      * @param {string} shaclSchema - shacl shapes in string format
      * @param {string} subclasses - subclasses hierarchy, that should be added to data
-     * @param {object} context for json-ld context
+     * @param {{
+     *     context: object|undefined,
+     *     annotations: object|undefined,
+     * }} options
      */
-    constructor(shaclSchema, subclasses, context) {
+    constructor(shaclSchema, subclasses, options) {
         this.subclasses = utils.parseTurtle(subclasses);
         this.shapes = utils.parseTurtle(shaclSchema);
-        this.context = context;
-        this.validator = new SHACLValidator(this.shapes.getQuads(), {rdf});
-        this.baseShaclUrl = 'http://www.w3.org/ns/shacl#';
-    }
-
-    /**
-     * Transforms n3 store to rdf dataset
-     * TODO Maybe remove
-     * @param {Store} store
-     * @returns {dataset}
-     */
-    n3ToRdfDataset(store) {
-        return rdf.dataset(store)
+        this.context = options.context || {};
+        this.annotations = options.annotations || {};
+        this.validator = new SHACLValidator(this.shapes.getQuads());
     }
 
     /**
@@ -34,9 +36,12 @@ class ShaclValidator {
      */
     getSeverity(val) {
         switch (val) {
-            case `${this.baseShaclUrl}Violation`: return 'error';
-            case `${this.baseShaclUrl}Warning`: return 'warning';
-            default: return 'info';
+            case SHACL('Info'):
+                return 'info';
+            case SHACL('Warning'):
+                return 'warning';
+            default:
+                return 'error';
         }
     }
 
@@ -44,7 +49,7 @@ class ShaclValidator {
      * Gets schema: annotations for some predicate
      * @param {namedNode} property - property, which should have an annotation
      * @param {namedNode} annotation - annotation predicate
-     * @returns {*}
+     * @returns {string|undefined}
      */
     getAnnotation(property, annotation) {
         this.shapes.getQuads(property, annotation, undefined).forEach(quad => {
@@ -55,19 +60,21 @@ class ShaclValidator {
     /**
      * Transform standard shacl failure to structured data failure
      * @param {object} shaclFailure
-     * @param {Store} shapes
      * @returns {StructuredDataFailure}
      */
-    toStructuredDataFailure(shaclFailure, shapes) {
-        let sourceShape = shapes.getQuads(undefined, 'http://www.w3.org/ns/shacl#property', shaclFailure.sourceShape)[0];
-        return {
+    toStructuredDataFailure(shaclFailure) {
+        let sourceShape = this.shapes.getQuads(undefined, SHACL('property'), shaclFailure.sourceShape)[0];
+        let failure = {
             property: shaclFailure.path ? shaclFailure.path.value : undefined,
-            message: shaclFailure.message.length > 0 ? shaclFailure.message.map(x => x.value).join(". ") : undefined,
-            url: this.getAnnotation(shaclFailure.sourceShape, rdf.namedNode("http://schema.org/url")),
-            description: this.getAnnotation(shaclFailure.sourceShape, rdf.namedNode("http://schema.org/description")),
-            severity: this.getSeverity(shaclFailure.severity.value),
+            message: shaclFailure.message.length > 0 ?
+                shaclFailure.message.map(x => x.value).join(". ") : undefined,
             service: sourceShape.subject.value.replace(/.*[\\/#]/, ''),
+            severity: this.getSeverity(shaclFailure.severity.value),
         }
+        for (const [key, value] of Object.entries(this.annotations)) {
+            failure[key] = this.getAnnotation(shaclFailure.sourceShape, namedNode(value));
+        }
+        return failure;
     }
 
     /**
@@ -79,8 +86,8 @@ class ShaclValidator {
         let quads = await utils.inputToQuads(data, baseUrl, this.context);
         let quadsWithSubclasses = quads.getQuads();
         quadsWithSubclasses.push(...this.subclasses.getQuads());
-        let report = this.validator.validate(this.n3ToRdfDataset(quadsWithSubclasses)).results
-            .map(x => this.toStructuredDataFailure(x, this.shapes));
+        let report = this.validator.validate(quadsWithSubclasses).results
+            .map(x => this.toStructuredDataFailure(x));
         return {
             baseUrl: baseUrl,
             quads: quads,
