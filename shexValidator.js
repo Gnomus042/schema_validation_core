@@ -1,4 +1,4 @@
-const shex = require('./lib/shex-extends.js');
+const shex = require('./lib/shex.js');
 const utils = require('./util.js');
 const errors = require('./errors.js');
 
@@ -154,34 +154,28 @@ class ValidationReport {
 
 class ShexValidator {
     /**
-     * @param {object} context  - JSON-LD context for schema.org
-     * @param {object} shexShapes - ShExJ shapes
+     * @param {object} shapes - ShExJ shapes
      */
-    constructor(context, shexShapes) {
-        this.context = context;
-        this.shexShapes = shexShapes;
-        this.baseShexUrl = 'http://schema.org/shex#';
-        this.schemaUrl = 'http://schema.org/';
+    constructor(shapes) {
+        this.shapes = shapes;
     }
 
     /**
      * Validates data against ShEx shapes
      * @param {string} data
-     * @param {string} service - e.g. Google, Bing, ...
+     * @param {string} shape -  identifier of the shape
      * @param {{ baseUrl: string|undefined }} options
      * @returns {Promise<{baseUrl: string, quads: Store, report: [StructuredDataFailure]}>}
      */
-    async validate(data, service, options={}) {
+    async validate(data, shape, options={}) {
         const baseUrl = options.baseUrl || utils.randomUrl();
-        const quads = await utils.inputToQuads(data, baseUrl, this.context);
-
-        const shape = utils.getType(quads, baseUrl).replace(/.*[\\/#]/, '');
+        const quads = await utils.inputToQuads(data, baseUrl);
         const db = shex.Util.makeN3DB(quads);
-        const validator = shex.Validator.construct(this.shexShapes);
+        const validator = shex.Validator.construct(this.shapes);
         const errors = new ValidationReport(validator.validate(db, [{
             node: baseUrl,
-            shape: this.baseShexUrl + service + shape,
-        }]), this.shexShapes);
+            shape: shape,
+        }]), this.shapes);
         return {
             baseUrl: baseUrl,
             quads: quads,

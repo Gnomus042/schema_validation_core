@@ -26,7 +26,6 @@ class ShaclValidator {
             this.subclasses = utils.parseTurtle(options.subclasses);
         }
         this.shapes = utils.parseTurtle(shaclSchema);
-        this.context = options.context || {};
         this.annotations = options.annotations || {};
         this.validator = new SHACLValidator(this.shapes.getQuads());
     }
@@ -65,12 +64,16 @@ class ShaclValidator {
      * @returns {StructuredDataFailure}
      */
     toStructuredDataFailure(shaclFailure) {
+        // finds a source shape if property is failing
         let sourceShape = this.shapes.getQuads(undefined, SHACL('property'), shaclFailure.sourceShape)[0];
+        // if the whole shape is failing then leave sourceShape
+        if (!sourceShape) sourceShape = shaclFailure.sourceShape;
+        else sourceShape = sourceShape.subject;
         let failure = {
             property: shaclFailure.path ? shaclFailure.path.value : undefined,
             message: shaclFailure.message.length > 0 ?
                 shaclFailure.message.map(x => x.value).join(". ") : undefined,
-            service: sourceShape.subject.value.replace(/.*[\\/#]/, ''),
+            service: sourceShape.value.replace(/.*[\\/#]/, ''),
             severity: this.getSeverity(shaclFailure.severity.value),
         }
         for (const [key, value] of Object.entries(this.annotations)) {
@@ -85,7 +88,7 @@ class ShaclValidator {
      */
     async validate(data) {
         let baseUrl = utils.randomUrl();
-        let quads = await utils.inputToQuads(data, baseUrl, this.context);
+        let quads = await utils.inputToQuads(data, baseUrl);
         let report;
         if (this.subclasses) {
             let quadsWithSubclasses = quads.getQuads();
