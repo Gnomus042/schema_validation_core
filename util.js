@@ -66,7 +66,7 @@ async function parseJsonLd(text, baseUrl) {
     let data = JSON.parse(text);
     data['@id'] = baseUrl;
     const nquads = await jsonld.toRDF(data, { format: 'application/n-quads' });
-    return parseTurtle(nquads, baseUrl);
+    return await parseTurtle(nquads, baseUrl);
 }
 
 
@@ -98,7 +98,7 @@ async function parseRdfa(text, baseUrl) {
  * @return {Promise<Store>}
  */
 async function parseMicrodata(text, baseUrl) {
-    const nquads = microdata.toRdf(text, {baseUrl: baseUrl});
+    const nquads = microdata.toRdf(text, {base: baseUrl}).split('_:0').join(`<${baseUrl}>`);
     if (nquads.length === 0) throw errors.InvalidDataError('Format is not Microdata');
     return parseTurtle(nquads, baseUrl);
 }

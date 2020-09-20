@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "dependencies": {
     "axios": "^0.20.0",
-    "deep-equal": "^2.0.3",
+    "child_process": "^1.0.2",
     "jsonld": "^3.1.1",
-    "jsonld-streaming-parser": "^2.1.0",
     "microdata-node": "^2.0.0",
     "minimist": "^1.2.5",
     "mocha": "^8.1.3",

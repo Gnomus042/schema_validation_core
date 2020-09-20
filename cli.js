@@ -6,8 +6,6 @@ const n3 = require('n3');
 const ShexValidator = require('./shexValidator').Validator;
 const utils = require('./util');
 
-const context = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'context.json')).toString());
-
 class CliError extends Error {
     constructor(message) {
         super(message);
@@ -49,15 +47,16 @@ function writeQuads(quads, output, format) {
     });
 }
 
-async function validateShEx(data, args) {
+async function validateShEx(data, base, args) {
     args.service = args.service || '';
     let shapes = await utils.loadData(args.shex);
-    let validator = new ShexValidator(context, shapes);
-    let report = await validator.validate(data, args.service)
+    let annotations = args.annotations ? JSON.parse(await utils.loadData(args.annotations)) : undefined;
+    let validator = new ShexValidator(shapes, {annotations: annotations});
+    let report = await validator.validate(data, args.target, {baseUrl: base});
     writeResult(JSON.stringify(report.failures, undefined, 2), args);
 }
 
-async function validateShacl(data, args) {
+async function validateShacl(data, base, args) {
     let shapes = await utils.loadData(args.shacl);
     let subclasses, annotations;
     if (args.subclasses) {
@@ -68,10 +67,9 @@ async function validateShacl(data, args) {
     }
     let validator = new ShaclValidator(shapes, {
         subclasses: subclasses,
-        context: context,
         annotations: annotations
     });
-    let report = validator.validate(data);
+    let report = validator.validate(data, {baseUrl: base});
     writeResult(JSON.stringify(report.failures, undefined, 2), args);
 }
 
@@ -83,13 +81,14 @@ async function main(args) {
     if (!args.input) throw new CliError('No input file path specified');
     if (args.output && !fs.existsSync(path.parse(args.output).dir)) throw new CliError(`Output directory \'${path.parse(args.output).dir}\' doesn\'t exist`);
     let data = fs.readFileSync(args.input).toString();
+    let base = args.base || utils.randomUrl()
     if (args.parse) {
-        let quads = await utils.inputToQuads(data, utils.randomUrl(), context);
+        let quads = await utils.inputToQuads(data, base);
         writeQuads(quads, args.output, args.format);
     } else if (args.validate) {
         if (args.shex && args.shacl) throw new CliError('Validation is possible for ShEx or SHACL, but not for both');
-        else if (args.shex) await validateShEx(data, args);
-        else if (args.shacl) await validateShacl(data, args);
+        else if (args.shex) await validateShEx(data, base, args);
+        else if (args.shacl) await validateShacl(data, base, args);
         else throw new CliError('No shapes provided for validation');
     }
 }
@@ -103,6 +102,10 @@ async function main(args) {
  *     validate: boolean|undefined
  *     shex: string|undefined
  *     shacl: string|undefined
+ *     base: string|undefined
+ *     target: string|undefined
+ *     annotations: string|undefined
+ *     subclasses: string|undefined
  * }} args - possible options for args
  */
 

@@ -16,7 +16,6 @@ class ShaclValidator {
     /**
      * @param {string} shaclSchema - shacl shapes in string format
      * @param {{
-     *     context: object|undefined,
      *     annotations: object|undefined,
      *     subclasses: string
      * }} options
@@ -53,9 +52,8 @@ class ShaclValidator {
      * @returns {string|undefined}
      */
     getAnnotation(property, annotation) {
-        this.shapes.getQuads(property, annotation, undefined).forEach(quad => {
-            return quad.object.value;
-        });
+        let quads = this.shapes.getQuads(property, annotation, undefined);
+        if (quads.length > 0) return quads[0].object.value;
     }
 
     /**
@@ -73,21 +71,23 @@ class ShaclValidator {
             property: shaclFailure.path ? shaclFailure.path.value : undefined,
             message: shaclFailure.message.length > 0 ?
                 shaclFailure.message.map(x => x.value).join(". ") : undefined,
-            service: sourceShape.value.replace(/.*[\\/#]/, ''),
+            shape: sourceShape.id,
             severity: this.getSeverity(shaclFailure.severity.value),
         }
         for (const [key, value] of Object.entries(this.annotations)) {
-            failure[key] = this.getAnnotation(shaclFailure.sourceShape, namedNode(value));
+            let annotation = this.getAnnotation(shaclFailure.sourceShape, namedNode(value));
+            if (annotation) failure[key] = annotation;
         }
         return failure;
     }
 
     /**
      * @param {string} data
+     * @param {{baseUrl: string|undefined}} options
      * @returns {Promise<{baseUrl: string, quads: Store, failures: [StructuredDataFailure]}>}
      */
-    async validate(data) {
-        let baseUrl = utils.randomUrl();
+    async validate(data, options={}) {
+        let baseUrl = options.baseUrl || utils.randomUrl();
         let quads = await utils.inputToQuads(data, baseUrl);
         let report;
         if (this.subclasses) {
@@ -111,10 +111,7 @@ class ShaclValidator {
  * @typedef {{
  *     property: string,
  *     message: string,
- *     url: string|undefined,
- *     description: string|undefined,
  *     severity: 'error'|'warning'|'info',
- *     service: string,
  *     shape: string
  * }} StructuredDataFailure
  */
