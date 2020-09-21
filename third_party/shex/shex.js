@@ -112,7 +112,7 @@ var ShExTerm = (function () {
   const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
   const XsdString = "http://www.w3.org/2001/XMLSchema#string";
 
-  // N3.js:lib/N3Parser.js<0.4.5>:576 with
+  // N3.js:third_party/N3Parser.js<0.4.5>:576 with
   //   s/this\./Parser./g
   //   s/token/iri/
   // ### `_resolveIRI` resolves a relative IRI token against the base path,
@@ -6804,7 +6804,7 @@ parse: function parse(input) {
     return union;
   }
 
-  // N3.js:lib/N3Parser.js<0.4.5>:58 with
+  // N3.js:third_party/N3Parser.js<0.4.5>:58 with
   //   s/this\./Parser./g
   // ### `_setBase` sets the base IRI to resolve relative IRIs.
   Parser._setBase = function (baseIRI) {
@@ -6824,7 +6824,7 @@ parse: function parse(input) {
     }
   }
 
-  // N3.js:lib/N3Parser.js<0.4.5>:576 with
+  // N3.js:third_party/N3Parser.js<0.4.5>:576 with
   //   s/this\./Parser./g
   //   s/token/iri/
   // ### `_resolveIRI` resolves a relative IRI token against the base path,

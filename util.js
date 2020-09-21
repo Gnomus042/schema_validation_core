@@ -22,7 +22,7 @@ const n3 = require('n3');
 const Store = n3.Store;
 const streamify = require('streamify-string');
 const RdfaParser = require('rdfa-streaming-parser').RdfaParser;
-const microdata = require('./lib/microdata-node');
+const microdata = require('./third_party/micriodata-node/microdata-node');
 
 const errors = require('./errors');
 

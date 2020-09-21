@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const shex = require('./lib/shex');
+const shex = require('./third_party/shex/shex');
 const utils = require('./util');
 const errors = require('./errors');
 
