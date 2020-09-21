@@ -19,15 +19,13 @@ const axios = require('axios');
 
 const jsonld = require('jsonld');
 const n3 = require('n3');
-const {namedNode, blankNode, variable, literal, defaultGraph, quad} = n3.DataFactory;
 const Store = n3.Store;
 const streamify = require('streamify-string');
 const RdfaParser = require('rdfa-streaming-parser').RdfaParser;
-const microdata = require('microdata-node');
+const microdata = require('./lib/microdata-node');
 
 const errors = require('./errors');
 
-const TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
 
 /**
  * Loads related data (shapes, context, etc.) from remote or local source
@@ -74,13 +72,13 @@ function randomUrl(length = 16) {
  * Parses json-ld to quads into the n3.Store
  * @param {string} text input data
  * @param {string} baseUrl
- * @return {Promise<Store>}
+ * @return {Store}
  */
 async function parseJsonLd(text, baseUrl) {
     let data = JSON.parse(text);
     data['@id'] = baseUrl;
     const nquads = await jsonld.toRDF(data, { format: 'application/n-quads' });
-    return await parseTurtle(nquads, baseUrl);
+    return parseTurtle(nquads, baseUrl);
 }
 
 
@@ -109,7 +107,7 @@ async function parseRdfa(text, baseUrl) {
  * Parses microdata to quads into the n3.Store
  * @param {string} text
  * @param {string} baseUrl
- * @return {Promise<Store>}
+ * @return {Store}
  */
 async function parseMicrodata(text, baseUrl) {
     const nquads = microdata.toRdf(text, {base: baseUrl}).split('_:0').join(`<${baseUrl}>`);

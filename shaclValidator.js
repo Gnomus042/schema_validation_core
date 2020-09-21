@@ -16,7 +16,7 @@
 const SHACLValidator = require('rdf-validate-shacl');
 const namedNode = require('n3').DataFactory.namedNode;
 
-const utils = require('./util.js');
+const utils = require('./util');
 
 /**
  * Adds shacl base prefix to value

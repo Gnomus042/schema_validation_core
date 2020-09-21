@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const shex = require('./lib/shex.js');
-const utils = require('./util.js');
-const errors = require('./errors.js');
+const shex = require('./lib/shex');
+const utils = require('./util');
+const errors = require('./errors');
 
 const TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
 
