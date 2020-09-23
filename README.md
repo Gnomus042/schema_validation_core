@@ -1,7 +1,7 @@
 # Schema.org Content Checker CORE
 NodeJs project for validating Sturctured Data with ShEx and SHACL. Is mainly used in a form of a bundle as a core part of the Schema.org Content Checker [demo](https://www.gnomus042.com/). <br /><br />
 **Main tasks:**
-- parsing JSON-LS, Microdata, RDFa data using [n3](https://github.com/rdfjs/N3.js/), [microdata-node](https://github.com/Janpot/microdata-node), [rdf-streaming-parser](https://github.com/rubensworks/rdfa-streaming-parser.js), [jsonld](https://www.npmjs.com/package/jsonld);
+- parsing JSON-LD, Microdata, RDFa data using [n3](https://github.com/rdfjs/N3.js/), [microdata-node](https://github.com/Janpot/microdata-node), [rdf-streaming-parser](https://github.com/rubensworks/rdfa-streaming-parser.js), [jsonld](https://www.npmjs.com/package/jsonld);
 - validating structured data against ShEx shapes using a minified version of [shex.js](https://github.com/shexSpec/shex.js); against SHACL shapes using [rdf-validate-shacl](https://github.com/zazuko/rdf-validate-shacl).
 
 ## Cli mode
