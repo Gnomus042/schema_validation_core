@@ -96,7 +96,7 @@ class ValidationReport {
         };
         switch (jsonReport.type) {
             case 'TypeMismatch':
-                failure.message = `Value provided for property ${failure.property} has a wrong type`;
+                failure.message = `Value provided for property ${failure.property} has an unexpected type`;
                 this.simplify(jsonReport.errors, undefined, undefined);
                 break;
             case 'MissingProperty':
@@ -140,7 +140,9 @@ class ValidationReport {
     getAnnotations(shape, property) {
         const mapper = new Map();
         if (!this.shapes.get(shape) || this.shapes.get(shape).length === 0) return mapper;
-        let propStructure = this.shapes.get(shape).expression.expressions
+        let shapeObj = this.shapes.get(shape);
+        shapeObj = Array.isArray(shapeObj) ? shapeObj[0] : shapeObj;
+        let propStructure = shapeObj.expression.expressions
             .filter(/** @param {{predicate: string}} x */x => x.predicate === property)[0];
         if (!propStructure || !propStructure.annotations) return mapper;
         propStructure.annotations.forEach(/** @param {{predicate: string, object:{value: string}}} x*/x => {

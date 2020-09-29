@@ -8,8 +8,8 @@ module.exports = {
         minimize: false
     },
     output: {
-        filename: 'validation-new.bundle.js',
-        library: 'validation'
+        filename: 'schemarama.bundle.js',
+        library: 'schemarama'
     },
     node: {
         tls: "empty",

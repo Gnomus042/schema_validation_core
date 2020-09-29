@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module.exports = {
-    shexValidator: require('./shexValidator').Validator,
-    shaclValidator: require('./shaclValidator').Validator,
+    ShexValidator: require('./shexValidator').Validator,
+    ShaclValidator: require('./shaclValidator').Validator,
     inputToQuads: require('./util').inputToQuads,
     parseJsonLd: require('./util').parseJsonLd,
     parseMicrodata: require('./util').parseMicrodata,
