@@ -32,6 +32,7 @@ class ValidationReport {
             this.shapes.set(shape.id, this.getShapeCore(shape));
         });
         this.simplify(jsonReport, undefined, undefined);
+        this.removeMissingIfTypeMismatch();
         this.annotations = annotations;
     }
 
@@ -96,7 +97,7 @@ class ValidationReport {
         };
         switch (jsonReport.type) {
             case 'TypeMismatch':
-                failure.message = `Value provided for property ${failure.property} has an unexpected type`;
+                failure.message = `Value provided for property ${failure.property} has a wrong type`;
                 this.simplify(jsonReport.errors, undefined, undefined);
                 break;
             case 'MissingProperty':
@@ -108,6 +109,9 @@ class ValidationReport {
             case 'BooleanSemActFailure':
                 if (!jsonReport.ctx.predicate) return;
                 failure.message = `Property ${failure.property} failed semantic action with code js:'${jsonReport.code}'`;
+                break;
+            case 'NegatedProperty':
+                failure.message = `Negated property ${failure.property}`;
                 break;
             default:
                 throw new errors.ShexValidationError(`Unknown failure type ${jsonReport.type}`);
@@ -140,15 +144,25 @@ class ValidationReport {
     getAnnotations(shape, property) {
         const mapper = new Map();
         if (!this.shapes.get(shape) || this.shapes.get(shape).length === 0) return mapper;
-        let shapeObj = this.shapes.get(shape);
-        shapeObj = Array.isArray(shapeObj) ? shapeObj[0] : shapeObj;
-        let propStructure = shapeObj.expression.expressions
+        let propStructure = this.shapes.get(shape).expression.expressions
             .filter(/** @param {{predicate: string}} x */x => x.predicate === property)[0];
         if (!propStructure || !propStructure.annotations) return mapper;
         propStructure.annotations.forEach(/** @param {{predicate: string, object:{value: string}}} x*/x => {
             mapper.set(x.predicate, x.object.value);
         });
         return mapper;
+    }
+
+    /**
+     * Hack for removing MissingProperty violations if the same property has TypeMismatch violation
+     */
+    removeMissingIfTypeMismatch() {
+        const typeMismatches = this.failures.filter(x => x.type === 'TypeMismatch');
+        const missings = [];
+        for (const typeMismatch of typeMismatches) {
+            missings.push(this.failures.filter(x => x.property === typeMismatch.property && x.type === 'MissingProperty')[0]);
+            this.failures = this.failures.filter(x => !missings.includes(x));
+        }
     }
 
     /**
