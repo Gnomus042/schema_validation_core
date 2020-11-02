@@ -4,6 +4,34 @@ NodeJs project for validating Sturctured Data with ShEx and SHACL. Is mainly use
 - parsing JSON-LD, Microdata, RDFa data using [n3](https://github.com/rdfjs/N3.js/), [microdata-node](https://github.com/Janpot/microdata-node), [rdf-streaming-parser](https://github.com/rubensworks/rdfa-streaming-parser.js), [jsonld](https://www.npmjs.com/package/jsonld);
 - validating structured data against ShEx shapes using a minified version of [shex.js](https://github.com/shexSpec/shex.js); against SHACL shapes using [rdf-validate-shacl](https://github.com/zazuko/rdf-validate-shacl).
 
+## Usage example
+**ShEx validation**
+```javascript
+const ShexValidator = require('./schemarama/shexValidator').Validator;
+const annotations = {
+    description: 'http://www.w3.org/2000/01/rdf-schema#comment',
+    severity: 'http://www.w3.org/2000/01/rdf-schema#label'
+}
+// shapes - JSON object with shapes in ShEx format
+const validator = new ShexValidator(shapes, {annotations: annotations});
+const startShape = 'http://schema.org/validation#ValidSchemaThing'
+// data - string or n3.js Store, that should be validated
+validator.validate(data, startShape, {baseUrl: 'http://example.org/test'}) 
+    .then(report => report.failures.forEach(failure => console.log(failure)));
+```
+**SHACL validation**
+```javascript
+const ShaclValidator = require('./schemarama/shaclValidator').Validator;
+const annotations = {
+    description: 'http://www.w3.org/2000/01/rdf-schema#comment',
+    severity: 'http://www.w3.org/2000/01/rdf-schema#label'
+}
+// shapes - JSON object with shapes in ShEx format
+const validator = new ShaclValidator(shapes, {annotations: annotations});
+// data - string or n3.js Store, that should be validated
+validator.validate(data, {baseUrl: 'http://example.org/test'}) 
+    .then(report => report.failures.forEach(failure => console.log(failure)));
+```
 ## Cli mode
 To use this project as a cli, first you need to do an ```npm install```
 ### Parsing: 
